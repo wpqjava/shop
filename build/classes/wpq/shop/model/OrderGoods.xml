@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wpq.shop.model.OrderGoods">
+	<insert id="add" parameterType="OrderGoods">
+		insert into t_orderGoods values (null,#{num},#{goods.id},#{orderId});
+	</insert>
+
+	<delete id="delete" parameterType="int">
+		delete from t_orderGoods where id=#{id};
+	</delete>
+	
+	<delete id="deleteByOrderId" parameterType="int">
+		delete from t_orderGoods where order_id=#{id};
+	</delete>
+	
+	<update id="update" parameterType="OrderGoods">
+		update t_orderGoods set num=#{num},goods_id=#{goods.id},order_id=#{orderId} where id=#{id};
+	</update>
+	
+	<select id="load" parameterType="Map" resultMap="orderGoodsMap">
+		select *,t1.id as 'o_id',t2.name as 'goods_name',t3.name as 'category_name' from t_orderGoods t1 left join t_goods t2 on (t1.goods_id=t2.id) left join t_category t3 on (t2.category_id=t3.id) where t1.id = #{id};
+	</select>
+	
+	<select id="loadByOrderId" parameterType="Map" resultMap="orderGoodsMapList">
+		select *,t1.id as 'o_id',t2.name as 'goods_name',t3.name as 'category_name' from t_orderGoods t1 left join t_goods t2 on (t1.goods_id=t2.id) left join t_category t3 on (t2.category_id=t3.id) where t1.order_id = #{orderId};
+	</select>
+	
+	<resultMap type="OrderGoods" id="orderGoodsMapList" autoMapping="true">
+		<id column="o_id" property="id"/>
+		<result column="num" property="num"/>
+		<result column="order_id" property="orderId"/>
+		<collection property="goods" ofType="Goods">
+			<id column="goods_id" property="id"/>
+			<result column="price" property="price"/>
+			<result column="intro" property="intro"/>
+			<result column="img" property="img"/>
+			<result column="stock" property="stock"/>
+			<result column="status" property="status"/>
+			<result column="goods_name" property="name"/>
+			<association property="category" javaType="Category">
+			<id column="category_id" property="id"/>
+			<result column="category_name" property="name"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<resultMap type="OrderGoods" id="orderGoodsMap" autoMapping="true">
+		<id column="o_id" property="id"/>
+		<result column="num" property="num"/>
+		<result column="order_id" property="orderId"/>
+		<collection property="goods" ofType="Goods">
+			<id column="goods_id" property="id"/>
+			<result column="price" property="price"/>
+			<result column="intro" property="intro"/>
+			<result column="img" property="img"/>
+			<result column="stock" property="stock"/>
+			<result column="status" property="status"/>
+			<result column="goods_name" property="name"/>
+			<association property="category" javaType="Category">
+			<id column="category_id" property="id"/>
+			<result column="category_name" property="name"/>
+			</association>
+		</collection>
+	</resultMap>
+	
+</mapper>

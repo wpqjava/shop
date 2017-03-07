@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wpq.shop.model.Order">
+	<insert id="add" parameterType="Order" useGeneratedKeys="true" keyProperty="id">
+		insert into t_order values (null,#{buyDate},#{payDate},#{confirmDate},#{price},1,#{user.id},#{address.id});
+	</insert>
+
+	<delete id="delete" parameterType="int">
+		delete from t_order where id=#{id};
+	</delete>
+	
+	<update id="update" parameterType="Order">
+		update t_order set price=#{price},status=#{status},payDate=#{payDate},confirmDate=#{confirmDate},address_id=#{address.id} where id=#{id};
+	</update>
+	
+	<select id="load" parameterType="Map" resultMap="orderMap">
+	<!-- 	select * from t_order where id=#{id} -->
+		select *,t1.status as 'order_status',t3.name as 'address_name',t1.user_id as 'order_user_id', t1.id as 't1_id',
+		t4.id as 'og_id',t5.name as 'goods_name',t5.status as 'goods_status',t6.name as 'category_name',
+		t1.price as 'order_price',t5.price as 'goods_price'
+		from t_order t1 left join t_user t2 on (t1.user_id=t2.id) left join t_address t3 on (t1.address_id=t3.id) 
+		left join t_ordergoods t4 on (t4.order_id=t1.id) left join t_goods t5 on (t4.goods_id=t5.id) left join t_category t6 on (t5.category_id=t6.id)
+		where t1.id=#{id}
+	</select>
+	
+	<resultMap type="Order" id="orderMap" autoMapping="true">
+		<id column="t1_id" property="id"/>
+		<result column="buyDate" property="buyDate"/>
+		<result column="payDate" property="payDate"/>
+		<result column="confirmDate" property="confirmDate"/>
+		<result column="order_status" property="status"/>
+		<result column="order_price" property="price"/>
+		<association property="user" javaType="User">
+			<id column="order_user_id" property="id"/>
+			<result column="username" property="username"/>
+			<result column="password" property="password"/>
+			<result column="nickname" property="nickname"/>
+			<result column="type" property="type"/>
+		</association>
+		<association property="address" javaType="Address">
+			<id column="address_id" property="id"/>
+			<result column="address_name" property="name"/>
+			<result column="phone" property="phone"/>
+		</association>
+		<collection property="orderGoodses" ofType="OrderGoods">
+			<id column="og_id" property="id"/>
+			<result column="num" property="num"/>
+			<result column="order_id" property="orderId"/>
+			<association property="goods" javaType="Goods">
+				<id column="goods_id" property="id"/>
+				<result column="goods_price" property="price"/>
+				<result column="intro" property="intro"/>
+				<result column="img" property="img"/>
+				<result column="stock" property="stock"/>
+				<result column="goods_status" property="status"/>
+				<result column="goods_name" property="name"/>
+					<association property="category" javaType="Category">
+					<id column="category_id" property="id"/>
+					<result column="category_name" property="name"/>
+					</association>
+			</association>
+		</collection>
+	</resultMap>
+	
+	<select id="find" parameterType="map" resultMap="orderMap">
+		select *,t1.status as 'order_status',t3.name as 'address_name',t1.user_id as 'order_user_id', t1.id as 't1_id',
+		t4.id as 'og_id',t5.name as 'goods_name',t5.status as 'goods_status',t6.name as 'category_name',
+		t1.price as 'order_price',t5.price as 'goods_price'
+		from t_order t1 left join t_user t2 on (t1.user_id=t2.id) left join t_address t3 on (t1.address_id=t3.id) 
+		left join t_ordergoods t4 on (t4.order_id=t1.id) left join t_goods t5 on (t4.goods_id=t5.id) left join t_category t6 on (t5.category_id=t6.id)
+		<!-- select *,t1.status as 'order_status',t3.name as 'address_name',t1.user_id as 'order_user_id', t1.id as 't1_id'
+		from t_order t1 left join t_user t2 on (t1.user_id=t2.id) left join t_address t3 on (t1.address_id=t3.id)  -->
+		<where>
+			<if test="userId!=0">t2.id=#{userId}</if>
+			<if test="condition!=null">t5.name like #{condition}</if>
+			<if test="status!=null">t1.status=#{status}</if>
+			<if test="sort!=null">order by ${sort} </if>
+			<choose>
+				<when test="order!=null">${order}</when>
+			</choose>
+		</where>
+		limit #{pageOffset},#{pageSize};
+	</select>
+	
+	<select id="find_count" parameterType="map" resultType="int">
+		select count(*) 
+		from t_order t1 left join t_user t2 on (t1.user_id=t2.id) 
+		left join t_ordergoods t4 on (t4.order_id=t1.id) left join t_goods t5 on (t4.goods_id=t5.id)  
+		<where>
+			<if test="userId!=0">t2.id=#{userId}</if>
+			<if test="condition!=null">t5.name like #{condition}</if>
+			<if test="status!=null">t1.status=#{status}</if>
+			<if test="sort!=null">order by ${sort} </if>
+		</where>
+	</select>
+</mapper>

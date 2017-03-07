@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wpq.shop.model.Goods">
+	<insert id="add" parameterType="Goods">
+		insert into t_goods values (null,#{name},#{price},#{intro},#{img},#{stock},#{status},#{category.id});
+	</insert>
+
+	<delete id="delete" parameterType="int">
+		delete from t_goods where id=#{id};
+	</delete>
+	
+	<update id="update" parameterType="Goods">
+		update t_goods set name=#{name},price=#{price},intro=#{intro},
+		img=#{img},stock=#{stock},status=#{status},category_id=#{category.id} where id=#{id};
+	</update>
+	
+	<select id="load" parameterType="Map" resultMap="goodsMap">
+		select *,t1.id as 'g_id',t1.name as 'g_name',t2.name as 'c_name' from t_goods t1 left join t_category t2 on (t1.category_id=t2.id) where t1.id=#{id};
+	</select>
+	
+	<resultMap type="Goods" id="goodsMap" autoMapping="true">
+		<id column="g_id" property="id"/>
+		<result column="g_name" property="name"/>
+		<collection property="category" ofType="Category">
+			<id column="category_id" property="id"/>
+			<result column="c_name" property="name"/>
+		</collection>
+	</resultMap>
+	
+	<select id="find" parameterType="Map" resultMap="goodsMap">
+		select *,t1.id as 'g_id',t1.name as 'g_name',t2.name as 'c_name' from t_goods t1 left join t_category t2 on (t1.category_id=t2.id)
+		<where>
+			<if test="condition!=null"> t1.name like #{condition}</if>
+			<if test="cid!=null">t1.category_id = #{cid}</if>
+			<if test="status!=null"> t1.status = #{status}</if>
+			<if test="sort!=null">order by ${sort} </if>
+			<choose>
+				<when test="order!=null">${order}</when>
+			</choose>
+		</where>
+		limit #{pageOffset},#{pageSize};
+	</select>
+	
+	<select id="find_count" parameterType="Map" resultType="int">
+		select count(*) from t_goods 
+		<where>
+			 <if test="cid!=null">category_id = #{cid}</if>
+			 <if test="condition!=null">and name like #{condition}</if>
+			 <if test="status!=null">and status = #{status}</if>
+		</where>
+	</select>
+</mapper>
